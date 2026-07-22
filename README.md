@@ -7,6 +7,6 @@ Based on the provided information, TreeMonkey will provide a list of plants whic
 
 Originally used a local host PostgreSQL server, then migrated to Supabase after needing to implement a Render express route which would allow querys to be made to the Supabase database based on user input.
 
-This project calls Perenual API for all plant related information, and waldoj's frostline project for zip code related information.\
+This project calls Perenual API for all plant related information, and waldoj's frostline project for zip code related information.
 
 This project is hosted on WebHostingHub.
