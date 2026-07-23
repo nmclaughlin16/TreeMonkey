@@ -1,0 +1,4 @@
+.env
+pageProgress.json
+node_modules/
+queue.json
