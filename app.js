@@ -8,22 +8,31 @@ app.use(cors());
 app.use(express.json());
 
 app.get('/api/plants/search', async (req, res) => {
-    const { sunamount, wateramount, soiltype, hardinesszone, drought, fruit, flower, indoor, 
+    console.log('Incoming query params: ', req.query);
+    const { sunlight, watering, soiltype, cycletype, hardinesszone, droughts, fruits, flowers, indoors, 
         poisonoustohumans, poisonoustopets } = req.query;
 
     let conditions = [];
     let values = [];
     let paramIndex = 1;
 
-    if (sunamount){
-        conditions.push(`$${paramIndex} = ANY(sunamount)`);
-        values.push(sunamount);
+    const sunlightSynonyms = {
+        full_sun: ['full sun', 'sun', 'full sun partial sun', 'Full sun only if soil kept moist'],
+        partial_shade: ['part sun/part shade', 'part shade', 'partial shade', 'partial sun shade'],
+        full_shade: ['shade', 'full shade', 'deep shade'],
+        filtered_shade: ['filtered shade'],
+        deciduous_shade: ['Deciduous Shade (Spring Sun)']
+    }
+    if (sunlight){
+        const variants = sunlightSynonyms[sunlight] || [sunlight];
+        conditions.push(`sunlight && $${paramIndex}::text[]`);
+        values.push(variants);
         paramIndex++;
     }
 
-    if (wateramount){
-        conditions.push(`$${paramIndex} = ANY(wateramount)`);
-        values.push(wateramount);
+    if (watering){
+        conditions.push(`$${paramIndex} = ANY(watering)`);
+        values.push(watering);
         paramIndex++;
     }
 
@@ -33,33 +42,39 @@ app.get('/api/plants/search', async (req, res) => {
         paramIndex++;
     }
 
+    if (cycletype){
+        conditions.push(`$${paramIndex} = ANY(cycletype)`);
+        values.push(cycletype);
+        paramIndex++;
+    }
+
     if (hardinesszone){
         conditions.push(`hardinesszonelower <= $${paramIndex} AND hardinesszoneupper >= $${paramIndex}`);
         values.push(parseInt(hardinesszone));
         paramIndex++;
     }
 
-    if (drought == 'true' || drought == 'false'){
-        conditions.push(`drought = $${paramIndex}`);
-        values.push(drought === 'true');
+    if (droughts == 'true' || droughts == 'false'){
+        conditions.push(`droughts = $${paramIndex}`);
+        values.push(droughts === 'true');
         paramIndex++;
     }
 
-    if (fruit == 'true' || fruit == 'false'){
-        conditions.push(`fruit = $${paramIndex}`);
-        values.push(fruit === 'true');
+    if (fruits == 'true' || fruits == 'false'){
+        conditions.push(`fruits = $${paramIndex}`);
+        values.push(fruits === 'true');
         paramIndex++;
     }
 
-    if (flower == 'true' || flower == 'false'){
-        conditions.push(`flower = $${paramIndex}`);
-        values.push(flower === 'true');
+    if (flowers == 'true' || flowers == 'false'){
+        conditions.push(`flowers = $${paramIndex}`);
+        values.push(flowers === 'true');
         paramIndex++;
     }
 
-    if (indoor == 'true' || indoor == 'false'){
-        conditions.push(`indoor = $${paramIndex}`);
-        values.push(indoor === 'true');
+    if (indoors == 'true' || indoors == 'false'){
+        conditions.push(`indoors = $${paramIndex}`);
+        values.push(indoors === 'true');
         paramIndex++;
     }
 
@@ -77,8 +92,9 @@ app.get('/api/plants/search', async (req, res) => {
 
     let query = 'SELECT * FROM plants';
     if (conditions.length > 0){
-        query += ' WHERE ' + conditions.join(' AND');
+        query += ' WHERE ' + conditions.join(' AND ');
     }
+    console.log('Built query:', query, values);
 
     try{
         const result = await pool.query(query, values);
@@ -115,6 +131,21 @@ app.get('/api/hardinesszone', async (req, res) => {
         res.status(500).json({ error: 'Encountered an error while processing request.'});
     }
 });
+
+// When plant selected, provide detail for that plant
+app.get('/api/plants/:id', async (req, res) => {
+    const { id } = req.params;
+    try{
+        const result = await pool.query('SELECT * FROM plants WHERE plantid = $1', [id]);
+        if(result.rows.length === 0){
+            return res.status(404).json({ error: 'Plant not found in database.'});
+        }
+        res.json(result.rows[0]);
+    } catch (err){
+        console.error('Had an error while fetching plant details: ', err.message);
+        res.status(500).json({ error: 'Encountered an error while processing request.'});
+    }
+})
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`API running on port ${PORT}`));
