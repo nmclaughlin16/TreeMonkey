@@ -48,11 +48,11 @@ app.get('/api/plants/search', async (req, res) => {
         paramIndex++;
     }
 
-    if (hardinesszone){
-        conditions.push(`hardinesszonelower <= $${paramIndex} AND hardinesszoneupper >= $${paramIndex}`);
-        values.push(parseInt(hardinesszone));
-        paramIndex++;
-    }
+    // if (hardinesszone){
+    //     conditions.push(`hardinesszonelower <= $${paramIndex} AND hardinesszoneupper >= $${paramIndex}`);
+    //     values.push(parseInt(hardinesszone));
+    //     paramIndex++;
+    // }
 
     if (droughts == 'true' || droughts == 'false'){
         conditions.push(`droughts = $${paramIndex}`);
