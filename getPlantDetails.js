@@ -4,7 +4,9 @@ const fs = require('fs');
 const pool = require('./db.js');
 
 const QUEUE_FILE = './queue.json';
-const LIMIT = 10;
+const LIMIT = 20;
+
+const downloadAndStoreImage = require('./savePlantImages');
 
 async function plantDetails(){
     if(!fs.existsSync(QUEUE_FILE)){
@@ -48,11 +50,13 @@ async function plantDetails(){
             break;
         }
 
+        const permanentImageURL = await downloadAndStoreImage(p.id, p.default_image?.regular_url ?? null);
+
         try{
             await pool.query(
-                `INSERT INTO plants (plantid, sunamount, cycletype, droughts, flowers, fruits, maintenance,
-                latinname, description, wateramount, soiltype, hardinesszonelower, hardinesszoneupper,
-                plantname, poisonoustopets, poisonoustohumans, indoor, floweringseason, image1url) 
+                `INSERT INTO plants (plantid, sunlight, cycletype, droughts, flowers, fruits, maintenance,
+                latinname, description, watering, soiltype, hardinesszonelower, hardinesszoneupper,
+                plantname, poisonoustopets, poisonoustohumans, indoors, floweringseason, image1url) 
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
                 ON CONFLICT (plantid) DO NOTHING`,
                 [
@@ -63,7 +67,7 @@ async function plantDetails(){
                     p.flowers ?? null,
                     p.fruits ?? null,
                     p.maintenance ?? null,
-                    p.scientific_name ?? null,
+                    p.scientific_name?.[0] ?? null,
                     p.description ?? null,
                     p.watering ? [p.watering] : [],
                     p.soil ?? [],
@@ -74,7 +78,7 @@ async function plantDetails(){
                     p.poisonous_to_pets ?? null,
                     p.indoor ?? null,
                     p.flowering_season ? [p.flowering_season] : [],
-                    p.default_image?.regular_url ?? null,
+                    permanentImageURL,
                 ]
             );
             inserted++;
