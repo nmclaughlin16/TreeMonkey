@@ -9,8 +9,7 @@ app.use(express.json());
 
 app.get('/api/plants/search', async (req, res) => {
     console.log('Incoming query params: ', req.query);
-    const { sunlight, watering, soiltype, cycletype, hardinesszone, droughts, fruits, flowers, indoors, 
-        poisonoustohumans, poisonoustopets } = req.query;
+    const { sunlight, watering, soiltype, cycletype, hardinesszone, droughts, fruits, flowers } = req.query;
 
     let conditions = [];
     let values = [];
@@ -48,11 +47,11 @@ app.get('/api/plants/search', async (req, res) => {
         paramIndex++;
     }
 
-    // if (hardinesszone){
-    //     conditions.push(`hardinesszonelower <= $${paramIndex} AND hardinesszoneupper >= $${paramIndex}`);
-    //     values.push(parseInt(hardinesszone));
-    //     paramIndex++;
-    // }
+    if (hardinesszone){
+        conditions.push(`hardinesszonelower <= $${paramIndex} AND hardinesszoneupper >= $${paramIndex}`);
+        values.push(parseInt(hardinesszone));
+        paramIndex++;
+    }
 
     if (droughts == 'true' || droughts == 'false'){
         conditions.push(`droughts = $${paramIndex}`);
@@ -69,24 +68,6 @@ app.get('/api/plants/search', async (req, res) => {
     if (flowers == 'true' || flowers == 'false'){
         conditions.push(`flowers = $${paramIndex}`);
         values.push(flowers === 'true');
-        paramIndex++;
-    }
-
-    if (indoors == 'true' || indoors == 'false'){
-        conditions.push(`indoors = $${paramIndex}`);
-        values.push(indoors === 'true');
-        paramIndex++;
-    }
-
-    if (poisonoustohumans == 'true' || poisonoustohumans == 'false'){
-        conditions.push(`poisonoustohumans = $${paramIndex}`);
-        values.push(poisonoustohumans === 'true');
-        paramIndex++;
-    }
-
-    if (poisonoustopets == 'true' || poisonoustopets == 'false'){
-        conditions.push(`poisonoustopets = $${paramIndex}`);
-        values.push(poisonoustopets === 'true');
         paramIndex++;
     }
 
